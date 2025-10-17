@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin | Live Data Feed</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- 🎨 THEME COLORS & VARIABLES (BITCOIN DARK MODE DEFAULT) --- */
+        :root {
+            --color-bg-dark: #121217;         /* Very Dark Blue-Gray */
+            --color-bg-light: #1e242d;        /* Card/Container background (Dark Slate) */
+            --color-accent: #f7931a;          /* Bitcoin Orange/Gold */
+            --color-text-primary: #e0e0e0;    /* Primary text color */
+            --color-text-secondary: #9a9a9a;  /* Secondary text/headers */
+            --color-shadow-dark: rgba(0, 0, 0, 0.7);
+            --color-shadow-light: rgba(255, 255, 255, 0.05);
+            --color-price-up: #10b981;        /* Teal Green (for 'Up' price) */
+            --color-button-bg: #1e242d;       /* Button background */
+        }
+
+        /* --- 💡 LIGHT MODE VARIABLES (BRIGHT TRADING LOOK) --- */
+        html[data-theme="light"] {
+            --color-bg-dark: #ffffff;         /* White background */
+            --color-bg-light: #f8f9fa;        /* Card/Container background */
+            --color-accent: #007bff;          /* Standard Blue Accent */
+            --color-text-primary: #212529;    /* Dark text color */
+            --color-text-secondary: #6c757d;  /* Dark secondary text */
+            --color-shadow-dark: rgba(0, 0, 0, 0.1);
+            --color-shadow-light: rgba(255, 255, 255, 0); 
+            --color-price-up: #28a745;        
+            --color-button-bg: #e9ecef;       
+        }
+
+
+        /* --- GLOBAL STYLING --- */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--color-bg-dark); 
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding-bottom: 50px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container { padding-top: 50px; }
+
+        /* --- HEADER & TEXT --- */
+        h1 {
+            font-weight: 800 !important;
+            color: var(--color-accent);
+            text-shadow: 0 0 15px var(--color-accent); /* Orange Glow */
+            letter-spacing: 1.5px;
+        }
+        html[data-theme="light"] h1 { text-shadow: none; }
+        .lead { color: var(--color-text-secondary); }
+
+        /* --- CARD / NEUMORPHIC CONTAINER --- */
+        .dashboard-card {
+            background: var(--color-bg-light); 
+            border-radius: 12px; /* Sharper corners for a technical look */
+            padding: 30px;
+            box-shadow: 
+                8px 8px 20px var(--color-shadow-dark), 
+                -8px -8px 20px var(--color-shadow-light); 
+            border: 1px solid rgba(255, 255, 255, 0.05); /* Thin border */
+            transition: all 0.3s ease;
+        }
+
+        /* --- BUTTON STYLING (Sculpted) --- */
+        .btn-theme-toggle {
+            background: var(--color-button-bg);
+            color: var(--color-text-secondary);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            box-shadow: 3px 3px 6px var(--color-shadow-dark), -3px -3px 6px var(--color-shadow-light);
+            transition: all 0.2s ease;
+        }
+        .btn-theme-toggle:hover {
+            color: var(--color-accent);
+            box-shadow: 0 0 10px var(--color-accent);
+        }
+
+        .btn-update {
+            background: var(--color-accent); /* Use Bitcoin Orange */
+            color: var(--color-bg-dark); /* Dark text on orange */
+            border: none;
+            border-radius: 8px; /* Sharper button corners */
+            padding: 10px 30px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(247, 147, 26, 0.5); /* Orange shadow */
+            transition: all 0.2s ease;
+        }
+        .btn-update:hover {
+            color: white;
+            background-color: #e48716;
+            transform: translateY(-2px); 
+        }
+        
+        /* --- TABLE STYLING --- */
+        .crypto-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px; /* Slightly reduced space */
+        }
+        .crypto-table th {
+            color: var(--color-accent); /* Orange headers */
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 15px 10px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(247, 147, 26, 0.3); /* Accent bottom border */
+        }
+        .crypto-table td {
+            background: rgba(255, 255, 255, 0.03); 
+            color: var(--color-text-primary);
+            padding: 18px 10px;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 6px; /* Sharper row corners */
+            border: none;
+        }
+        .crypto-table tbody tr:hover td {
+            background: rgba(247, 147, 26, 0.1); /* Subtle orange highlight on hover */
+            cursor: pointer;
+        }
+
+        /* --- DATA HIGHLIGHTS --- */
+        .coin-name {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            color: white;
+        }
+        .price-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-price-up); 
+            text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); /* Green glow for price */
+        }
+        .last-updated { 
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="text-start">
+                <h1 class="mb-0"><i class="fab fa-bitcoin me-3"></i>BITCOIN Data Feed</h1>
+                <p class="lead mb-0">Live currency data updated by an automated service.</p>
+            </div>
+            
+            <button id="theme-toggle" class="btn btn-theme-toggle" title="Toggle Theme">
+                <i class="fas fa-sun"></i> 
+            </button>
+        </div>
+
+        <div class="text-center mb-4">
+            <a href="{{ url_for('update') }}" class="btn btn-update btn-lg">
+                <i class="fas fa-bolt me-2"></i> Trigger Immediate Update
+            </a>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="table-responsive">
+                <table class="crypto-table text-center align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 30%;"><i class="fas fa-tag"></i> Name</th>
+                            <th style="width: 30%;"><i class="fas fa-dollar-sign"></i> Price (USD)</th>
+                            <th style="width: 35%;"><i class="fas fa-calendar-check"></i> Last Updated (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data %}
+                        <tr>
+                            <td>{{ loop.index }}</td> 
+                            <td><span class="coin-name">{{ item.name }}</span></td>
+                            <td><span class="price-value">${{ "{:,.2f}".format(item.value) }}</span></td>
+                            <td><span class="last-updated">{{ item.last_updated.strftime("%Y-%m-%d %H:%M:%S") }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5" style="background: rgba(255, 0, 0, 0.05); color: #ff6b6b; border-radius: 10px;">
+                                <i class="fas fa-exclamation-triangle me-2"></i> CRITICAL: No data available. Please run the scraper (`python scraper.py`) manually first.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <p class="text-center mt-5 last-updated">
+                <i class="fas fa-robot me-2"></i> Automation Status: Data is scheduled to update periodically via Cron.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const toggleButton = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        function setTheme(theme) {
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            const icon = toggleButton.querySelector('i');
+            if (theme === 'light') {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        }
+
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            setTheme(storedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            setTheme('light');
+        } else {
+            setTheme('dark');
+        }
+
+        toggleButton.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        });
+    </script>
+</body>
+</html>
