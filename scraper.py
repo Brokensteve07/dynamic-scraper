@@ -1,140 +1,138 @@
 # scraper.py
+
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import requests
-from bs4 import BeautifulSoup
-import os
+import re # For regular expressions, used for data cleaning
 
-# Define the database path
-db_path = 'database.db'
-engine = create_engine(f'sqlite:///{db_path}')
+# --- 1. Database Setup ---
+# Initialize the database connection
+DATABASE_URL = "sqlite:///database.db"
+Engine = create_engine(DATABASE_URL)
 Base = declarative_base()
+Session = sessionmaker(bind=Engine)
 
+# --- 2. Data Model Definition (Matching the Frontend/UI) ---
 class ScrapedItem(Base):
-    __tablename__ = 'scraped_items'
+    __tablename__ = 'scraped_data'
+    
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    symbol = Column(String, nullable=False) # NEW: To store BTC, ETH etc.
-    icon_url = Column(String)              # NEW: For cryptocurrency icons
-    value = Column(Float, nullable=False)
-    change_1h = Column(Float)              # NEW: 1-hour percentage change
-    change_24h = Column(Float)             # NEW: 24-hour percentage change
-    change_7d = Column(Float)              # NEW: 7-day percentage change
-    market_cap = Column(Float)             # NEW: Market Cap
-    volume_24h = Column(Float)             # NEW: 24-hour Volume
-    circulating_supply = Column(Float)     # NEW: Circulating Supply
+    symbol = Column(String, nullable=False)
+    icon_url = Column(String)
+    value = Column(Float, nullable=False) # Price
+    change_1h = Column(Float)
+    change_24h = Column(Float)
+    change_7d = Column(Float)
+    market_cap = Column(Float)
+    volume_24h = Column(Float)
+    circulating_supply = Column(Float)
     last_updated = Column(DateTime, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f"<ScrapedItem(name='{self.name}', value='{self.value}')>"
+# Ensure the table is created/updated (IMPORTANT after adding new columns)
+Base.metadata.create_all(Engine)
 
-# Create tables (only if they don't exist)
-Base.metadata.create_all(engine)
 
-Session = sessionmaker(bind=engine)
+# --- 3. Data Cleaning Utilities ---
 
-def scrape_coinmarketcap():
-    url = "https://coinmarketcap.com/" # This URL might change or need adjustments for API
-    headers = {
+def convert_suffix_to_number(value_str):
+    """Converts strings like '$1.5B' or '300M' into a float."""
+    if not isinstance(value_str, (str, int, float)):
+        return None
+    if isinstance(value_str, (int, float)):
+        return float(value_str)
+
+    value_str = value_str.upper().replace('$', '').replace(',', '').strip()
+    
+    if 'T' in value_str:
+        return float(re.sub(r'[^\d.]', '', value_str)) * 1_000_000_000_000
+    if 'B' in value_str:
+        return float(re.sub(r'[^\d.]', '', value_str)) * 1_000_000_000
+    if 'M' in value_str:
+        return float(value_str.strip('M')) * 1_000_000
+    if 'K' in value_str:
+        return float(value_str.strip('K')) * 1_000
+    
+    try:
+        return float(value_str)
+    except ValueError:
+        return None
+
+
+# --- 4. Web Scraping Logic (Using Internal API) ---
+
+def scrape_data():
+    """Fetches comprehensive crypto data from CoinMarketCap's public data API."""
+    
+    # This is a stable internal API endpoint that returns JSON data
+    # start=1&limit=100 will fetch the top 100 coins
+    API_URL = 'https://api.coinmarketcap.com/data-api/v3/cryptocurrency/listing?start=1&limit=100&sortBy=market_cap&sortType=desc&convert=USD&cryptoType=all&tagType=all&aux=ath,atl,high24h,low24h,num_market_pairs,cmc_rank,date_added,max_supply,circulating_supply,total_supply,volume7d,volume30d'
+    
+    HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    # !! IMPORTANT !!
-    # CoinMarketCap uses dynamic content loaded by JavaScript.
-    # Direct scraping of the HTML like this might only get static content or empty tables.
-    # You might need to:
-    # 1. Use a headless browser (like Selenium) to render the page first.
-    # 2. Look for an unofficial API endpoint that CMC uses (often found in browser dev tools -> Network tab).
-    # 3. Use an official (but likely paid) CoinMarketCap API.
-    # For this example, I'll assume some elements are available via direct scrape,
-    # but be prepared for it to be difficult without Selenium/API.
-
-    crypto_data = []
-    # This selector is a GUESS and will almost certainly need adjustment
-    # based on real-time inspection of CMC's current HTML structure.
-    # Inspect the <tbody> within the main table on CMC.
-    table_rows = soup.select('table > tbody > tr') # This needs to be more specific
     
-    # Try to find a script tag with initial data, sometimes sites embed JSON
-    # script_tag = soup.find('script', id='__NEXT_DATA__')
-    # if script_tag:
-    #     import json
-    #     data = json.loads(script_tag.string)
-    #     # Parse data['props']['pageProps']['initialProps']['pageData'] or similar structure
-    #     # This is usually the most robust way if available.
+    crypto_data = []
 
-    for row in table_rows:
-        try:
-            # These selectors are highly speculative and need to be found by
-            # inspecting CoinMarketCap's current HTML structure using browser developer tools.
-            # Example:
-            # name_element = row.select_one('p.coin-name')
-            # price_element = row.select_one('div.price-value')
-            # market_cap_element = row.select_one('span.market-cap')
+    try:
+        response = requests.get(API_URL, headers=HEADERS, timeout=15)
+        response.raise_for_status() 
+        json_data = response.json()
 
-            name = row.select_one('.cmc-table__column-name').text.strip() # This is a guess
-            symbol = row.select_one('.cmc-table__column-symbol').text.strip() # Guess
-            icon_url = row.select_one('.coin-icon img')['src'] # Guess
+        # Drill down to the list of crypto items
+        data_list = json_data['data']['cryptoCurrencyList']
+        
+        for item in data_list:
+            quote = item.get('quotes', [{}])[0] # Get the USD quote data
             
-            price_str = row.select_one('.cmc-table__column-price').text.strip().replace('$', '').replace(',', '') # Guess
-            price = float(price_str)
-
-            change_1h_str = row.select_one('.cmc-table__column-change--1h').text.strip().replace('%', '') # Guess
-            change_1h = float(change_1h_str)
-
-            change_24h_str = row.select_one('.cmc-table__column-change--24h').text.strip().replace('%', '') # Guess
-            change_24h = float(change_24h_str)
-
-            change_7d_str = row.select_one('.cmc-table__column-change--7d').text.strip().replace('%', '') # Guess
-            change_7d = float(change_7d_str)
-
-            market_cap_str = row.select_one('.cmc-table__column-market-cap').text.strip().replace('$', '').replace(',', '') # Guess
-            market_cap = float(market_cap_str)
-
-            volume_24h_str = row.select_one('.cmc-table__column-volume').text.strip().replace('$', '').replace(',', '') # Guess
-            volume_24h = float(volume_24h_str)
-
-            circulating_supply_str = row.select_one('.cmc-table__column-supply').text.strip().replace(',', '') # Guess
-            # This might require more complex parsing if it has 'B', 'M', 'K' suffixes
-            circulating_supply = float(circulating_supply_str)
-
+            # Construct the icon URL using the CMC ID
+            icon_id = item.get('id')
+            icon_url = f"https://s2.coinmarketcap.com/static/img/coins/64x64/{icon_id}.png"
+            
             crypto_data.append({
-                'name': name,
-                'symbol': symbol,
+                'name': item.get('name'),
+                'symbol': item.get('symbol'),
                 'icon_url': icon_url,
-                'value': price,
-                'change_1h': change_1h,
-                'change_24h': change_24h,
-                'change_7d': change_7d,
-                'market_cap': market_cap,
-                'volume_24h': volume_24h,
-                'circulating_supply': circulating_supply
+                'value': quote.get('price'),
+                'change_1h': quote.get('percentChange1h'),
+                'change_24h': quote.get('percentChange24h'),
+                'change_7d': quote.get('percentChange7d'),
+                'market_cap': quote.get('marketCap'),
+                'volume_24h': quote.get('volume24h'),
+                'circulating_supply': item.get('circulatingSupply'),
             })
-        except AttributeError:
-            # Handle cases where a selector doesn't find an element in a row
-            print(f"Skipping row due to missing element: {row}")
-            continue
-        except ValueError as e:
-            # Handle conversion errors if text isn't a valid number
-            print(f"Skipping row due to data conversion error: {e} in row: {row}")
-            continue
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from API: {e}")
+        return []
+    except Exception as e:
+        print(f"Error parsing JSON or data structure changed: {e}")
+        return []
+        
     return crypto_data
 
-def update_database():
-    session = Session()
-    try:
-        data = scrape_coinmarketcap()
-        for item_data in data:
-            # Try to find an existing record by name
-            record = session.query(ScrapedItem).filter_by(name=item_data['name']).first()
+# --- 5. Database Update Logic ---
 
+def update_database():
+    """Scrapes data and performs an upsert (UPDATE or INSERT) into the database."""
+    scraped_items = scrape_data()
+    if not scraped_items:
+        print("No valid data scraped. Database not updated.")
+        return
+
+    session = Session()
+    start_time = datetime.now()
+    
+    try:
+        for item_data in scraped_items:
+            # Check for name or symbol to find existing record
+            record = session.query(ScrapedItem).filter_by(symbol=item_data['symbol']).first()
+            
             if record:
-                # Update existing record
-                record.symbol = item_data['symbol']
+                # UPDATE existing record
+                record.name = item_data['name']
                 record.icon_url = item_data['icon_url']
                 record.value = item_data['value']
                 record.change_1h = item_data['change_1h']
@@ -145,28 +143,33 @@ def update_database():
                 record.circulating_supply = item_data['circulating_supply']
                 record.last_updated = datetime.utcnow()
             else:
-                # Insert new record
-                new_record = ScrapedItem(
-                    name=item_data['name'],
-                    symbol=item_data['symbol'],
-                    icon_url=item_data['icon_url'],
-                    value=item_data['value'],
-                    change_1h=item_data['change_1h'],
-                    change_24h=item_data['change_24h'],
-                    change_7d=item_data['change_7d'],
-                    market_cap=item_data['market_cap'],
-                    volume_24h=item_data['volume_24h'],
-                    circulating_supply=item_data['circulating_supply'],
-                    last_updated=datetime.utcnow()
-                )
+                # INSERT new record
+                new_record = ScrapedItem(**item_data, last_updated=datetime.utcnow())
                 session.add(new_record)
+        
         session.commit()
-        print("Database update complete.")
+        print(f"Database update successful. Time taken: {datetime.now() - start_time}")
+        
     except Exception as e:
         session.rollback()
-        print(f"Error during database update: {e}")
+        print(f"CRITICAL ERROR during DB transaction: {e}")
     finally:
         session.close()
 
-if __name__ == "__main__":
+# --- 6. Data Retrieval Logic (for Flask App) ---
+
+def get_all_data():
+    """Fetches all records from the database, ordered by market cap."""
+    session = Session()
+    try:
+        # Order by Market Cap descending to mimic CMC ranking
+        data = session.query(ScrapedItem).order_by(ScrapedItem.market_cap.desc()).all() 
+        return data
+    except Exception as e:
+        print(f"Error retrieving data: {e}")
+        return []
+    finally:
+        session.close()
+
+if __name__ == '__main__':
     update_database()
