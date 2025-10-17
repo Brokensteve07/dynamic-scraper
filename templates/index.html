@@ -1,100 +1,112 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark"> <head>
+<html lang="en" data-theme="dark">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin | Live Data Feed</title>
+    <title>CoinTrack | Live Crypto Dashboard</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
-        /* --- 🎨 THEME COLORS & VARIABLES (BITCOIN DARK MODE DEFAULT) --- */
+        /* --- 🎨 THEME COLORS & VARIABLES (COINMARKETCAP-INSPIRED DARK MODE DEFAULT) --- */
         :root {
-            --color-bg-dark: #121217;         /* Very Dark Blue-Gray */
-            --color-bg-light: #1e242d;        /* Card/Container background (Dark Slate) */
+            --color-bg-dark: #1a1e2a;         /* Deep Blue-Gray for background */
+            --color-bg-light: #2c313d;        /* Card/Container background (Slightly lighter) */
             --color-accent: #f7931a;          /* Bitcoin Orange/Gold */
             --color-text-primary: #e0e0e0;    /* Primary text color */
             --color-text-secondary: #9a9a9a;  /* Secondary text/headers */
             --color-shadow-dark: rgba(0, 0, 0, 0.7);
             --color-shadow-light: rgba(255, 255, 255, 0.05);
-            --color-price-up: #10b981;        /* Teal Green (for 'Up' price) */
-            --color-button-bg: #1e242d;       /* Button background */
+            --color-price-up: #16c784;        /* Green for positive change */
+            --color-price-down: #ea3943;      /* Red for negative change */
+            --color-neutral: #9a9a9a;         /* Gray for zero change */
+            --color-button-bg: #2c313d;       /* Button background */
         }
 
-        /* --- 💡 LIGHT MODE VARIABLES (BRIGHT TRADING LOOK) --- */
+        /* --- 💡 LIGHT MODE VARIABLES (Minimalistic Trading Look) --- */
         html[data-theme="light"] {
-            --color-bg-dark: #ffffff;         /* White background */
-            --color-bg-light: #f8f9fa;        /* Card/Container background */
-            --color-accent: #007bff;          /* Standard Blue Accent */
-            --color-text-primary: #212529;    /* Dark text color */
-            --color-text-secondary: #6c757d;  /* Dark secondary text */
+            --color-bg-dark: #ffffff;         
+            --color-bg-light: #f8f9fa;        
+            --color-accent: #007bff;          
+            --color-text-primary: #212529;    
+            --color-text-secondary: #6c757d;  
             --color-shadow-dark: rgba(0, 0, 0, 0.1);
             --color-shadow-light: rgba(255, 255, 255, 0); 
             --color-price-up: #28a745;        
+            --color-price-down: #dc3545;
+            --color-neutral: #6c757d;
             --color-button-bg: #e9ecef;       
         }
 
 
         /* --- GLOBAL STYLING --- */
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif; /* More modern font */
             background-color: var(--color-bg-dark); 
             color: var(--color-text-primary);
             min-height: 100vh;
             padding-bottom: 50px;
             transition: background-color 0.3s, color 0.3s;
         }
-        .container { padding-top: 50px; }
+        .container { padding-top: 40px; } /* Slightly less padding */
 
         /* --- HEADER & TEXT --- */
         h1 {
             font-weight: 800 !important;
             color: var(--color-accent);
-            text-shadow: 0 0 15px var(--color-accent); /* Orange Glow */
-            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px var(--color-accent); /* Softer glow */
+            letter-spacing: 1px;
+            font-size: 2.2rem;
         }
         html[data-theme="light"] h1 { text-shadow: none; }
-        .lead { color: var(--color-text-secondary); }
+        .lead { 
+            color: var(--color-text-secondary); 
+            font-size: 0.95rem;
+        }
 
-        /* --- CARD / NEUMORPHIC CONTAINER --- */
+        /* --- CARD / CONTAINER STYLING --- */
         .dashboard-card {
             background: var(--color-bg-light); 
-            border-radius: 12px; /* Sharper corners for a technical look */
-            padding: 30px;
+            border-radius: 12px; 
+            padding: 25px; /* Slightly less padding */
             box-shadow: 
-                8px 8px 20px var(--color-shadow-dark), 
-                -8px -8px 20px var(--color-shadow-light); 
-            border: 1px solid rgba(255, 255, 255, 0.05); /* Thin border */
+                6px 6px 15px var(--color-shadow-dark), 
+                -6px -6px 15px var(--color-shadow-light); 
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Slightly more visible border */
             transition: all 0.3s ease;
         }
 
-        /* --- BUTTON STYLING (Sculpted) --- */
+        /* --- BUTTONS & INPUTS --- */
         .btn-theme-toggle {
             background: var(--color-button-bg);
             color: var(--color-text-secondary);
             border: none;
             border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            box-shadow: 3px 3px 6px var(--color-shadow-dark), -3px -3px 6px var(--color-shadow-light);
+            width: 40px; /* Slightly smaller */
+            height: 40px;
+            font-size: 0.9rem;
+            box-shadow: 2px 2px 4px var(--color-shadow-dark), -2px -2px 4px var(--color-shadow-light);
             transition: all 0.2s ease;
         }
         .btn-theme-toggle:hover {
             color: var(--color-accent);
-            box-shadow: 0 0 10px var(--color-accent);
+            box-shadow: 0 0 8px var(--color-accent);
+            transform: translateY(-1px);
         }
 
         .btn-update {
-            background: var(--color-accent); /* Use Bitcoin Orange */
-            color: var(--color-bg-dark); /* Dark text on orange */
+            background: var(--color-accent);
+            color: var(--color-bg-dark);
             border: none;
-            border-radius: 8px; /* Sharper button corners */
-            padding: 10px 30px;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(247, 147, 26, 0.5); /* Orange shadow */
+            border-radius: 8px;
+            padding: 8px 25px; /* Slightly smaller button */
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 3px 8px rgba(247, 147, 26, 0.4);
             transition: all 0.2s ease;
         }
         .btn-update:hover {
@@ -102,58 +114,155 @@
             background-color: #e48716;
             transform: translateY(-2px); 
         }
-        
+
+        .search-input {
+            background-color: var(--color-button-bg);
+            color: var(--color-text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Softer border */
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            background-color: var(--color-bg-dark);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 0.15rem rgba(247, 147, 26, 0.2); /* Softer glow */
+            color: white;
+        }
+        .input-group-text {
+            background-color: var(--color-button-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--color-text-secondary);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+        }
+        .search-input.form-control {
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+        }
+
         /* --- TABLE STYLING --- */
         .crypto-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 8px; /* Slightly reduced space */
+            border-spacing: 0 6px; /* Reduced spacing for more compact look */
         }
         .crypto-table th {
-            color: var(--color-accent); /* Orange headers */
-            font-weight: 600;
-            text-transform: uppercase;
-            padding: 15px 10px;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid rgba(247, 147, 26, 0.3); /* Accent bottom border */
+            color: var(--color-text-secondary); /* Headers are gray, not accent */
+            font-weight: 500; /* Lighter weight */
+            text-transform: capitalize; /* Capitalize, not uppercase */
+            padding: 12px 8px;
+            letter-spacing: 0.2px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Thinner border */
         }
         .crypto-table td {
-            background: rgba(255, 255, 255, 0.03); 
+            background: rgba(255, 255, 255, 0.02); /* Very subtle row background */
             color: var(--color-text-primary);
-            padding: 18px 10px;
+            padding: 12px 8px;
             font-family: 'Roboto Mono', monospace;
-            border-radius: 6px; /* Sharper row corners */
+            border-radius: 8px; /* Slightly more rounded */
             border: none;
+            font-size: 0.9rem;
         }
         .crypto-table tbody tr:hover td {
-            background: rgba(247, 147, 26, 0.1); /* Subtle orange highlight on hover */
+            background: rgba(247, 147, 26, 0.08); /* Lighter orange highlight on hover */
             cursor: pointer;
         }
 
-        /* --- DATA HIGHLIGHTS --- */
-        .coin-name {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            color: white;
+        /* --- DATA-SPECIFIC STYLING --- */
+        .coin-info {
+            display: flex;
+            align-items: center;
+            text-align: left;
         }
+        .coin-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            border-radius: 50%;
+        }
+        .coin-name-symbol {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .coin-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: white; /* Always white for coin names in dark mode */
+            font-size: 0.95rem;
+        }
+        html[data-theme="light"] .coin-name { color: var(--color-text-primary); } /* Darker in light mode */
+        .coin-symbol {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            color: var(--color-text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
         .price-value {
-            font-size: 1.25rem;
+            font-size: 1rem; /* Slightly smaller price */
             font-weight: 700;
             color: var(--color-price-up); 
-            text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); /* Green glow for price */
+            text-shadow: 0 0 3px rgba(22, 199, 132, 0.2);
         }
+
+        /* Percentage change styling */
+        .change {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .change.up { color: var(--color-price-up); }
+        .change.down { color: var(--color-price-down); }
+        .change.neutral { color: var(--color-neutral); }
+        .change i {
+            margin-right: 4px;
+            font-size: 0.7rem;
+        }
+
+        /* Format numbers */
+        .formatted-number {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+        }
+
         .last-updated { 
             color: var(--color-text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container { padding-top: 20px; }
+            h1 { font-size: 1.8rem; }
+            .lead { font-size: 0.85rem; }
+            .dashboard-card { padding: 15px; }
+            .btn-update { padding: 6px 15px; font-size: 0.85rem; }
+            .search-input { padding: 6px 10px; font-size: 0.85rem; }
+            .crypto-table th, .crypto-table td { padding: 8px 5px; font-size: 0.8rem; }
+            .coin-icon { width: 20px; height: 20px; }
+            .coin-name { font-size: 0.85rem; }
+            .coin-symbol { font-size: 0.7rem; }
+            .price-value { font-size: 0.9rem; }
+            .change { font-size: 0.8rem; }
+            .formatted-number { font-size: 0.8rem; }
+            .last-updated { font-size: 0.75rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-start">
-                <h1 class="mb-0"><i class="fab fa-bitcoin me-3"></i>BITCOIN Data Feed</h1>
-                <p class="lead mb-0">Live currency data updated by an automated service.</p>
+                <h1 class="mb-0"><i class="fas fa-chart-line me-3"></i>CoinTrack Live</h1>
+                <p class="lead mb-0">Real-time cryptocurrency insights.</p>
             </div>
             
             <button id="theme-toggle" class="btn btn-theme-toggle" title="Toggle Theme">
@@ -161,35 +270,92 @@
             </button>
         </div>
 
-        <div class="text-center mb-4">
-            <a href="{{ url_for('update') }}" class="btn btn-update btn-lg">
-                <i class="fas fa-bolt me-2"></i> Trigger Immediate Update
-            </a>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="col-md-5 col-12 order-md-1 order-2">
+                <div class="input-group">
+                    <span class="input-group-text search-input" style="border-right: none;"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search coin name or symbol..." class="form-control search-input" style="border-left: none;">
+                </div>
+            </div>
+            <div class="col-md-auto col-12 text-md-end text-center order-md-2 order-1">
+                 <a href="{{ url_for('update') }}" class="btn btn-update">
+                    <i class="fas fa-sync-alt me-2"></i> Update Data
+                </a>
+            </div>
         </div>
 
         <div class="dashboard-card">
             <div class="table-responsive">
-                <table class="crypto-table text-center align-middle">
+                <table id="cryptoTable" class="crypto-table text-center align-middle">
                     <thead>
                         <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 30%;"><i class="fas fa-tag"></i> Name</th>
-                            <th style="width: 30%;"><i class="fas fa-dollar-sign"></i> Price (USD)</th>
-                            <th style="width: 35%;"><i class="fas fa-calendar-check"></i> Last Updated (UTC)</th>
+                            <th class="text-start" style="width: 2%;">#</th>
+                            <th class="text-start" style="width: 20%;">Name</th>
+                            <th style="width: 12%;">Price</th>
+                            <th style="width: 8%;">1h %</th>
+                            <th style="width: 8%;">24h %</th>
+                            <th style="width: 8%;">7d %</th>
+                            <th style="width: 14%;">Market Cap</th>
+                            <th style="width: 14%;">Volume (24h)</th>
+                            <th style="width: 14%;">Circulating Supply</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in data %}
                         <tr>
-                            <td>{{ loop.index }}</td> 
-                            <td><span class="coin-name">{{ item.name }}</span></td>
-                            <td><span class="price-value">${{ "{:,.2f}".format(item.value) }}</span></td>
-                            <td><span class="last-updated">{{ item.last_updated.strftime("%Y-%m-%d %H:%M:%S") }}</span></td>
+                            <td class="text-start">{{ loop.index }}</td> 
+                            <td class="text-start">
+                                <div class="coin-info">
+                                    {% if item.icon_url %}
+                                    <img src="{{ item.icon_url }}" alt="{{ item.name }}" class="coin-icon">
+                                    {% else %}
+                                    <i class="fas fa-coins coin-icon" style="color: var(--color-accent);"></i>
+                                    {% endif %}
+                                    <div class="coin-name-symbol">
+                                        <span class="coin-name">{{ item.name }}</span>
+                                        <span class="coin-symbol">{{ item.symbol }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="price-value">${{ "{:,.2f}".format(item.value) if item.value is not none else 'N/A' }}</span></td>
+                            <td>
+                                <span class="change {{ 'up' if item.change_1h > 0 else ('down' if item.change_1h < 0 else 'neutral') }}">
+                                    {% if item.change_1h is not none %}
+                                        <i class="fas {{ 'fa-caret-up' if item.change_1h > 0 else ('fa-caret-down' if item.change_1h < 0 else '') }}"></i>
+                                        {{ "{:,.2f}%".format(item.change_1h) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="change {{ 'up' if item.change_24h > 0 else ('down' if item.change_24h < 0 else 'neutral') }}">
+                                    {% if item.change_24h is not none %}
+                                        <i class="fas {{ 'fa-caret-up' if item.change_24h > 0 else ('fa-caret-down' if item.change_24h < 0 else '') }}"></i>
+                                        {{ "{:,.2f}%".format(item.change_24h) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="change {{ 'up' if item.change_7d > 0 else ('down' if item.change_7d < 0 else 'neutral') }}">
+                                    {% if item.change_7d is not none %}
+                                        <i class="fas {{ 'fa-caret-up' if item.change_7d > 0 else ('fa-caret-down' if item.change_7d < 0 else '') }}"></i>
+                                        {{ "{:,.2f}%".format(item.change_7d) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td><span class="formatted-number">${{ "{:,.0f}".format(item.market_cap) if item.market_cap is not none else 'N/A' }}</span></td>
+                            <td><span class="formatted-number">${{ "{:,.0f}".format(item.volume_24h) if item.volume_24h is not none else 'N/A' }}</span></td>
+                            <td><span class="formatted-number">{{ "{:,.0f}".format(item.circulating_supply) if item.circulating_supply is not none else 'N/A' }}</span></td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center py-5" style="background: rgba(255, 0, 0, 0.05); color: #ff6b6b; border-radius: 10px;">
-                                <i class="fas fa-exclamation-triangle me-2"></i> CRITICAL: No data available. Please run the scraper (`python scraper.py`) manually first.
+                            <td colspan="9" class="text-center py-5" style="background: rgba(255, 0, 0, 0.05); color: #ff6b6b; border-radius: 10px;">
+                                <i class="fas fa-exclamation-triangle me-2"></i> No data. Please run the scraper (`python scraper.py`) and ensure data is being fetched.
                             </td>
                         </tr>
                         {% endfor %}
@@ -198,7 +364,7 @@
             </div>
             
             <p class="text-center mt-5 last-updated">
-                <i class="fas fa-robot me-2"></i> Automation Status: Data is scheduled to update periodically via Cron.
+                <i class="fas fa-robot me-2"></i> Data updates every 30 minutes via automated service. Latest refresh: <span id="lastUpdatedDisplay">{{ data[0].last_updated.strftime("%Y-%m-%d %H:%M:%S UTC") if data else 'N/A' }}</span>
             </p>
         </div>
     </div>
@@ -206,6 +372,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // --- Theme Toggle Logic (unchanged) ---
         const toggleButton = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
@@ -237,6 +404,43 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
         });
+
+        // --- Live Search Function (updated to search name AND symbol) ---
+        function filterTable() {
+            let input, filter, table, tr, tdName, tdSymbol, i, txtValueName, txtValueSymbol;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("cryptoTable");
+            tr = table.getElementsByTagName("tr");
+            
+            for (i = 1; i < tr.length; i++) { // Skip header row
+                tdName = tr[i].getElementsByTagName("td")[1]; // Coin Name column
+                
+                if (tdName) {
+                    txtValueName = tdName.querySelector('.coin-name').textContent || tdName.querySelector('.coin-name').innerText;
+                    txtValueSymbol = tdName.querySelector('.coin-symbol').textContent || tdName.querySelector('.coin-symbol').innerText;
+                    
+                    if (txtValueName.toUpperCase().indexOf(filter) > -1 || txtValueSymbol.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = ""; // Show the row
+                    } else {
+                        tr[i].style.display = "none"; // Hide the row
+                    }
+                }       
+            }
+        }
+
+        // --- Auto-update Last Refresh Time (Optional but nice touch) ---
+        function updateLastRefreshDisplay() {
+            const lastUpdatedElement = document.getElementById('lastUpdatedDisplay');
+            if (lastUpdatedElement && lastUpdatedElement.textContent === 'N/A') {
+                // If N/A, try to fetch from the first item
+                const firstItemDate = document.querySelector('#cryptoTable tbody tr:first-child .last-updated');
+                if (firstItemDate) {
+                    lastUpdatedElement.textContent = firstItemDate.textContent;
+                }
+            }
+        }
+        updateLastRefreshDisplay(); // Run on load
     </script>
 </body>
 </html>
